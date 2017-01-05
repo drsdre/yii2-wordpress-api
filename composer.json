@@ -1,0 +1,29 @@
+{
+  "name": "drsdre/yii2-wordpress-api",
+  "description": "Yii2 Extension to connect with a Wordpress Rest API using oAuth",
+  "keywords": ["yii2", "extension", "rest", "API", "oAuth", "Wordpress", "cms"],
+  "homepage": "https://github.com/drsdre/yii2-wordpress-api",
+  "type": "yii2-extension",
+  "license": "BSD-3-Clause",
+  "support": {
+    "issues": "https://github.com/drsdre/yii2-wordpress-api/issues?state=open",
+    "source": "https://github.com/drsdre/yii2-wordpress-api",
+    "docs": "http://v2.wp-api.org/"
+  },
+  "authors": [
+    {
+      "name": "Andre Schuurman",
+      "email": "andre.schuurman+yii2-wordpress-api@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">=5.5.0",
+    "yiisoft/yii2-httpclient": "~2.0.1",
+    "yiisoft/yii2-authclient": "~2.1.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "drsdre\\WordpressApi": ""
+    }
+  }
+}
