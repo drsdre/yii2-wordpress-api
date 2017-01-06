@@ -1,6 +1,6 @@
 {
   "name": "drsdre/yii2-wordpress-api",
-  "description": "Yii2 Extension to connect with a Wordpress Rest API using oAuth",
+  "description": "Yii2 Extension to connect with a Wordpress Rest API using oAuth or basic authentication",
   "keywords": ["yii2", "extension", "rest", "API", "oAuth", "Wordpress", "cms"],
   "homepage": "https://github.com/drsdre/yii2-wordpress-api",
   "type": "yii2-extension",
@@ -23,7 +23,7 @@
   },
   "autoload": {
     "psr-4": {
-      "drsdre\\WordpressApi": ""
+      "drsdre\\WordpressApi\\": ""
     }
   }
 }
