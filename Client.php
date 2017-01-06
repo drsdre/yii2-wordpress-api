@@ -263,7 +263,7 @@ class Client extends \yii\base\Object {
 	// API Data response methods
 
 	/**
-	 * Return response as array
+	 * Return content as array
 	 *
 	 * @return array
 	 * @throws Exception
@@ -275,7 +275,7 @@ class Client extends \yii\base\Object {
 	}
 
 	/**
-	 * Return response as object
+	 * Return content as object
 	 *
 	 * @return \stdClass
 	 * @throws Exception
@@ -287,12 +287,12 @@ class Client extends \yii\base\Object {
 	}
 
 	/**
-	 * Get the raw response object
+	 * Get the raw content object
 	 *
 	 * @return yii\httpclient\Response
 	 */
 	public function asRaw() {
-		return $this->response;
+		return $this->response->content;
 	}
 
 	/**
