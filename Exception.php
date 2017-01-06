@@ -8,20 +8,33 @@ namespace drsdre\WordpressApi;
  * Error codes handling retry and other specific conditions
  *
  * @author Andre Schuurman <andre.schuurman+yii2-wordpress-api@gmail.com>
- * @since 2.0
  */
-class Exception extends yii\base\Exception {
+class Exception extends \yii\base\Exception {
 
 	const FAIL = 0;
 	const RETRY = 1;
 	const WAIT_RETRY = 2;
 	const ITEM_EXISTS = 3;
 
+	static $code_names = [
+		self::FAIL => ' unrecoverable',
+		self::RETRY => ' and can be retried',
+		self::WAIT_RETRY => ' and can be retried after wait time',
+		self::ITEM_EXISTS => ' because item already exists',
+	];
+
 	/**
 	 * @return string the user-friendly name of this exception
 	 */
 	public function getName()
 	{
-		return 'API response failed, retry';
+		return 'API request failed'.$this->getCodeName();
+	}
+
+	/**
+	 * @return mixed|string
+	 */
+	public function getCodeName() {
+		return isset(self::$code_names[$this->getCode()])?self::$code_names[$this->getCode()]:'';
 	}
 }

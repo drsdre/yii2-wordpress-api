@@ -30,9 +30,8 @@ namespace drsdre\WordpressApi;
  * @see https://wordpress.org/plugins/rest-api-oauth1/
  *
  * @author Andre Schuurman <andre.schuurman+yii2-wordpress-api@gmail.com>
- * @since 2.0
  */
-class OAuth1 extends yii\authclient\OAuth1
+class OAuth1 extends \yii\authclient\OAuth1
 {
 	/**
 	 * @inheritdoc

@@ -17,10 +17,8 @@ use yii\base\InvalidConfigException;
  * @see    http://v2.wp-api.org/
  *
  * @author Andre Schuurman <andre.schuurman+yii2-wordpress-api@gmail.com>
- * @since  2.0
- *
  */
-class Client extends yii\base\Object {
+class Client extends \yii\base\Object {
 
 	/**
 	 * @var string API endpoint (default production)
