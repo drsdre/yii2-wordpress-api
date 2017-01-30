@@ -184,7 +184,7 @@ class Client extends \yii\base\Object {
 	 */
 	public function updateData(
 		$entity_url,
-		$context = 'view',
+		$context = 'edit',
 		array $data
 	) {
 		// Set Set query data
@@ -193,6 +193,35 @@ class Client extends \yii\base\Object {
 		$this->request =
 			$this->createAuthenticatedRequest()
 			     ->setMethod( 'put' )
+			     ->setUrl( str_replace( $this->endpoint . '/', '', $entity_url ) )// Strip endpoint url from url param
+			     ->setData( $data )
+		;
+
+		$this->executeRequest();
+
+		return $this;
+	}
+
+	/**
+	 * Update with entity url
+	 *
+	 * @param string $entity_url
+	 * @param string $context view or edit
+	 * @param array $data
+	 *
+	 * @return self
+	 */
+	public function patchData(
+		$entity_url,
+		$context = 'edit',
+		array $data
+	) {
+		// Set Set query data
+		$data['context'] = $context;
+
+		$this->request =
+			$this->createAuthenticatedRequest()
+			     ->setMethod( 'patch' )
 			     ->setUrl( str_replace( $this->endpoint . '/', '', $entity_url ) )// Strip endpoint url from url param
 			     ->setData( $data )
 		;
@@ -242,7 +271,7 @@ class Client extends \yii\base\Object {
 	 */
 	public function deleteData(
 		$entity_url,
-		$context = 'view',
+		$context = 'edit',
 		array $data
 	) {
 		// Set context
