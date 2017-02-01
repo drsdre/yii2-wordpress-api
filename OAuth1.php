@@ -59,17 +59,9 @@ class OAuth1 extends \yii\authclient\OAuth1
 	public $accessTokenMethod = 'POST';
 
 	/**
-	 * var $apiBaseUrl is Wordpress site url
+	 * var $apiBaseUrl is Wordpress site url (json slug is auto added)
 	 */
 	public $apiBaseUrl;
-
-	/**
-	 * @var array list of extra parameters, which should be used, while requesting user attributes from Wordpress API.
-	 *
-	 * @see http://oauth1.wp-api.org/docs/basics/Auth-Flow.html
-	 * @since 2.0.6
-	 */
-	public $attributeParams = [];
 
 	/**
 	 * @inheritdoc
@@ -82,8 +74,8 @@ class OAuth1 extends \yii\authclient\OAuth1
 		$this->requestTokenUrl = $this->apiBaseUrl.'/'.$this->requestTokenUrl;
 		$this->accessTokenUrl = $this->apiBaseUrl.'/'.$this->accessTokenUrl;
 
-		// Set apiBaseUrl to Wordpress v2 URL
-		$this->apiBaseUrl = $this->apiBaseUrl.'/wp-json/wp/v2';
+		// Set apiBaseUrl to Wordpress Rest API base slug
+		$this->apiBaseUrl = $this->apiBaseUrl.'/wp-json';
 	}
 
 	/**

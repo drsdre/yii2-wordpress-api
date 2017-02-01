@@ -21,7 +21,7 @@ use yii\base\InvalidConfigException;
 class Client extends \yii\base\Object {
 
 	/**
-	 * @var string API endpoint (default production)
+	 * @var string API url endpoint
 	 */
 	public $endpoint = '';
 
@@ -174,7 +174,7 @@ class Client extends \yii\base\Object {
 	}
 
 	/**
-	 * Update with entity url
+	 * Put data with entity url
 	 *
 	 * @param string $entity_url
 	 * @param string $context view or edit
@@ -182,7 +182,7 @@ class Client extends \yii\base\Object {
 	 *
 	 * @return self
 	 */
-	public function updateData(
+	public function putData(
 		$entity_url,
 		$context = 'edit',
 		array $data
@@ -203,7 +203,7 @@ class Client extends \yii\base\Object {
 	}
 
 	/**
-	 * Update with entity url
+	 * Patch with entity url
 	 *
 	 * @param string $entity_url
 	 * @param string $context view or edit
@@ -232,7 +232,7 @@ class Client extends \yii\base\Object {
 	}
 
 	/**
-	 * Add data with entity url
+	 * Post data with entity url
 	 *
 	 * @param string $entity_url
 	 * @param string $context view or edit
@@ -240,7 +240,7 @@ class Client extends \yii\base\Object {
 	 *
 	 * @return self
 	 */
-	public function addData(
+	public function postData(
 		$entity_url,
 		$context = 'view',
 		array $data
@@ -373,19 +373,23 @@ class Client extends \yii\base\Object {
 
 				// Check for response status code
 				if ( ! $this->response->isOk ) {
+					$result_content = Json::decode( $this->response->content, false );
 					switch ( $this->response->statusCode ) {
 						case 304:
 							throw new Exception(
 								'Not Modified.'
 							);
 						case 400:
+							$parameter_errors = [];
+							foreach($result_content->data->params as $param_error) {
+								$parameter_errors[] = $param_error;
+							}
 							throw new Exception(
-								'Bad Request: request ' . $this->request->getFullUrl() . ' was invalid.',
+								'Bad Request: '.implode(' | ', $parameter_errors).' (request ' . $this->request->getFullUrl() . ').',
 								Exception::FAIL
 							);
 						case 401:
-							// Handle {"code":"json_oauth1_nonce_already_used","message":"Invalid nonce - nonce has already been used","data":{"status":401}}
-							$result_content = Json::decode( $this->response->content, false );
+							// Nonce used can be retried, other 401 can not
 							if ( isset( $result_content->code ) && $result_content->code == 'json_oauth1_nonce_already_used' ) {
 								throw new Exception(
 									( isset( $result_content->message ) ? $result_content->message : $this->response->content ) .
@@ -394,7 +398,7 @@ class Client extends \yii\base\Object {
 								);
 							} else {
 								throw new Exception(
-									'Unauthorized: user does not have permission to access ' . $this->request->getFullUrl(),
+									'Unauthorized: '.$result_content->message.' (request ' . $this->request->getFullUrl() . ').',
 									Exception::FAIL
 								);
 							}
