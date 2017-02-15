@@ -10,7 +10,7 @@ use yii\base\InvalidConfigException;
  * Client for communicating with a Wordpress Rest API interface (standard included from Wordpress 4.7 on).
  *
  * Authentication can either be done using:
- * - oAuth1 plugin, see drsdre\WordpressApi\Oauth1.php
+ * - oAuth1 plugin, see drsdre\WordpressApi\OAuth1.php
  * - Basic Authentication with user/password (not recommended for live) see https://github.com/WP-API/Basic-Auth.
  * See http://v2.wp-api.org/guide/authentication/
  *
@@ -102,7 +102,7 @@ class Client extends \yii\base\Object {
 		if ( empty( $this->client_key ) && empty( $this->client_secret ) || empty( $this->access_token ) ) {
 			if ( empty( $this->username ) || empty( $this->password ) ) {
 				throw new InvalidConfigException(
-					'Either specify client_key, client_secret & access_token for Oauth1 [production] ' .
+					'Either specify client_key, client_secret & access_token for OAuth1 [production] ' .
 					'or username and password for basic auth [development only].' );
 			}
 
@@ -121,7 +121,7 @@ class Client extends \yii\base\Object {
 			$token->setParams( $this->access_token );
 
 			// Start a WordpressAuth session
-			$this->client = new Oauth1( [
+			$this->client = new OAuth1( [
 				'accessToken'    => $token,
 				'consumerKey'    => $this->client_key,
 				'consumerSecret' => $this->client_secret,
@@ -330,7 +330,7 @@ class Client extends \yii\base\Object {
 	 * @return yii\httpclient\Request
 	 */
 	protected function createAuthenticatedRequest() {
-		if ( is_a( $this->client, 'drsdre\WordpressApi\Oauth1' ) ) {
+		if ( is_a( $this->client, 'drsdre\WordpressApi\OAuth1' ) ) {
 			// oAuth1 request
 			$request = $this->client
 				->createApiRequest();
