@@ -5,6 +5,7 @@ namespace drsdre\WordpressApi;
 use yii\helpers\Json;
 use yii\authclient\OAuthToken;
 use yii\base\InvalidConfigException;
+use yii\base\InvalidParamException;
 
 /**
  * Client for communicating with a Wordpress Rest API interface (standard included from Wordpress 4.7 on).
@@ -325,6 +326,13 @@ class Client extends \yii\base\Object {
 	}
 
 	/**
+	 * Get the request content from the last request
+	 */
+	public function getLastRequestContent() {
+		return $this->request->content;
+	}
+
+	/**
 	 * Create authenticated request
 	 *
 	 * @return yii\httpclient\Request
@@ -368,12 +376,15 @@ class Client extends \yii\base\Object {
 
 		do {
 			try {
-				// Do request
+				// Execute request
 				$this->response = $this->request->send();
+
+				// Test result
+				$result_content = Json::decode( $this->response->content, false );
 
 				// Check for response status code
 				if ( ! $this->response->isOk ) {
-					$result_content = Json::decode( $this->response->content, false );
+
 					switch ( $this->response->statusCode ) {
 						case 304:
 							throw new Exception(
@@ -454,29 +465,35 @@ class Client extends \yii\base\Object {
 					}
 				}
 				$request_success = true;
+			} catch (InvalidParamException $e) {
+				throw new Exception(
+					'Invalid JSON data returned: ' . $e->getMessage(),
+					Exception::FAIL
+				);
+
+			} catch ( \yii\httpclient\Exception $e ) {
+				// Check if call can be retried and max retries is not hit
+				// Should this be code 7 CURLE_COULDNT_CONNECT ?
+				if ( $e->getCode() == 2 && $this->retries < $this->max_retry_attempts ) {
+					// Retry the request
+					$request_success = false;
+					$this->retries ++;
+				} else {
+					// Too many retries, retrow Exception
+					throw new Exception(
+						'Curl connection error: ' . $e->getMessage(),
+						Exception::FAIL
+					);
+				}
+
 			} catch ( Exception $e ) {
 				// Retry if exception can be retried
-				if ( $e->getCode() == Exception::RETRY ) {
-					//
+				if ( $e->getCode() == Exception::RETRY && $this->retries < $this->max_retry_attempts ) {
+					// Retry the request
 					$request_success = false;
 					$this->retries ++;
-					if ( $this->retries <= $this->max_retry_attempts ) {
-						throw $e;
-					}
 				} else {
-					// Retrow Exception
-					throw $e;
-				}
-			} catch ( \yii\httpclient\Exception $e ) {
-				// Retry on 'if fopen(): SSL: Connection reset by peer'
-				if ( $e->getCode() == 2 && $this->retries <= $this->max_retry_attempts ) {
-					$request_success = false;
-					$this->retries ++;
-					if ( $this->retries <= $this->max_retry_attempts ) {
-						throw $e;
-					}
-				} else {
-					// Retrow Exception
+					// Too many retries, retrow Exception
 					throw $e;
 				}
 			}
