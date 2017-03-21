@@ -319,17 +319,21 @@ class Client extends \yii\base\Object {
 	/**
 	 * Get the raw content object
 	 *
-	 * @return yii\httpclient\Response
+	 * @return string
 	 */
 	public function asRaw() {
-		return $this->response->content;
+		if ( isset( $this->response->content ) ) {
+			return $this->response->content;
+		}
 	}
 
 	/**
 	 * Get the request content from the last request
 	 */
 	public function getLastRequestContent() {
-		return $this->request->content;
+		if (isset($this->request->content)) {
+			return $this->request->content;
+		}
 	}
 
 	/**
@@ -468,7 +472,7 @@ class Client extends \yii\base\Object {
 			} catch (InvalidParamException $e) {
 				throw new Exception(
 					'Invalid JSON data returned: ' . $e->getMessage(),
-					Exception::FAIL
+					Exception::ILLEGAL_RESPONSE
 				);
 
 			} catch ( \yii\httpclient\Exception $e ) {

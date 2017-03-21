@@ -15,12 +15,14 @@ class Exception extends \yii\base\Exception {
 	const RETRY = 1;
 	const WAIT_RETRY = 2;
 	const ITEM_EXISTS = 3;
+	const ILLEGAL_RESPONSE = 4;
 
 	static $code_names = [
 		self::FAIL => ' unrecoverable',
 		self::RETRY => ' and can be retried',
 		self::WAIT_RETRY => ' and can be retried after wait time',
 		self::ITEM_EXISTS => ' because item already exists',
+		self::ILLEGAL_RESPONSE => ' with an illegal JSON response',
 	];
 
 	/**
