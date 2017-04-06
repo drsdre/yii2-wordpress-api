@@ -11,18 +11,29 @@ namespace drsdre\WordpressApi;
  */
 class Exception extends \yii\base\Exception {
 
-	const FAIL = 0;
-	const RETRY = 1;
-	const WAIT_RETRY = 2;
-	const ITEM_EXISTS = 3;
-	const ILLEGAL_RESPONSE = 4;
+	const HANDLE_AS_FAIL = 0;
+	const HANDLE_AS_RETRY = 1;
+	const HANDLE_AS_WAIT_RETRY = 2;
+	const HANDLE_AS_ITEM_EXISTS = 3;
+	const HANDLE_AS_ITEM_NOT_FOUND = 4;
+	const HANDLE_AS_ILLEGAL_RESPONSE = 4;
 
-	static $code_names = [
-		self::FAIL => ' unrecoverable',
-		self::RETRY => ' and can be retried',
-		self::WAIT_RETRY => ' and can be retried after wait time',
-		self::ITEM_EXISTS => ' because item already exists',
-		self::ILLEGAL_RESPONSE => ' with an illegal JSON response',
+	static $handle_names = [
+		self::HANDLE_AS_FAIL => 'unrecoverable',
+		self::HANDLE_AS_RETRY => 'can be retried',
+		self::HANDLE_AS_WAIT_RETRY => 'can be retried after wait time',
+		self::HANDLE_AS_ITEM_NOT_FOUND => 'item is not found',
+		self::HANDLE_AS_ITEM_EXISTS => 'item already exists',
+		self::HANDLE_AS_ILLEGAL_RESPONSE => 'illegal JSON response',
+	];
+
+	static $code_handle_mappings = [
+		404 => self::HANDLE_AS_ITEM_NOT_FOUND,
+		429 => self::HANDLE_AS_WAIT_RETRY,
+		432 => self::HANDLE_AS_RETRY,
+		433 => self::HANDLE_AS_ITEM_EXISTS,
+		502 => self::HANDLE_AS_RETRY,
+		512 => self::HANDLE_AS_ILLEGAL_RESPONSE,
 	];
 
 	/**
@@ -30,13 +41,20 @@ class Exception extends \yii\base\Exception {
 	 */
 	public function getName()
 	{
-		return 'API request failed'.$this->getCodeName();
+		return "API request failed (#{$this->getCode()}): {$this->getMessage()}. To be handled as {$this->getHandleText()}";
 	}
 
 	/**
-	 * @return mixed|string
+	 * @return int
 	 */
-	public function getCodeName() {
-		return isset(self::$code_names[$this->getCode()])?self::$code_names[$this->getCode()]:'';
+	public function getHandleCode() {
+		return isset(self::$code_handle_mappings[$this->getCode()])?self::$code_handle_mappings[$this->getCode()]:self::HANDLE_AS_FAIL;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getHandleText() {
+		return self::$handle_names[$this->getHandleCode()];
 	}
 }

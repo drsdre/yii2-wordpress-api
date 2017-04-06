@@ -6,6 +6,7 @@ use yii\helpers\Json;
 use yii\authclient\OAuthToken;
 use yii\base\InvalidConfigException;
 use yii\base\InvalidParamException;
+use yii\httpclient\Response;
 
 /**
  * Client for communicating with a Wordpress Rest API interface (standard included from Wordpress 4.7 on).
@@ -380,100 +381,106 @@ class Client extends \yii\base\Object {
 
 		do {
 			try {
-				// Execute request
+				// Execute the request
 				$this->response = $this->request->send();
 
-				// Test result
+				// Test the result
 				$result_content = Json::decode( $this->response->content, false );
 
-				// Check for response status code
+				// Check if response is valid
 				if ( ! $this->response->isOk ) {
 
+					// Error handling
 					switch ( $this->response->statusCode ) {
 						case 304:
-							throw new Exception(
-								'Not Modified.'
-							);
+							throw new Exception( 'Not Modified.', $this->response->statusCode );
 						case 400:
+							// Collect the request parameters
 							$parameter_errors = [];
-							foreach($result_content->data->params as $param_error) {
+							foreach ( $result_content->data->params as $param_error ) {
 								$parameter_errors[] = $param_error;
 							}
+
 							throw new Exception(
-								'Bad Request: '.implode(' | ', $parameter_errors).' (request ' . $this->request->getFullUrl() . ').',
-								Exception::FAIL
+								'Bad Request: ' . implode( ' | ',
+									$parameter_errors ) . ' (request ' . $this->request->getFullUrl() . ').',
+								$this->response->statusCode
 							);
 						case 401:
-							// Nonce used can be retried, other 401 can not
 							if ( isset( $result_content->code ) && $result_content->code == 'json_oauth1_nonce_already_used' ) {
+								// Oauth1 nonce already used, can be retried
+
+								// Map to status code 432 (unassigned)
 								throw new Exception(
 									( isset( $result_content->message ) ? $result_content->message : $this->response->content ) .
 									' ' . $this->request->getFullUrl(),
-									Exception::RETRY
-								);
-							} else {
-								throw new Exception(
-									'Unauthorized: '.$result_content->message.' (request ' . $this->request->getFullUrl() . ').',
-									Exception::FAIL
+									432
 								);
 							}
+
+							// Generic 401 error
+							throw new Exception(
+								'Unauthorized: ' . $result_content->message . ' (request ' . $this->request->getFullUrl() . ').',
+								$this->response->statusCode
+							);
 						case 403:
 							throw new Exception(
-								'Forbidden: request not authenticated accessing ' . $this->request->getFullUrl(),
-								Exception::FAIL
+								'Forbidden: request not allowed accessing ' . $this->request->getFullUrl(),
+								$this->response->statusCode
 							);
 						case 404:
 							throw new Exception(
-								'No data found: route ' . $this->request->getFullUrl() . 'does not exist.',
-								Exception::FAIL
+								'Not found: ' . $this->request->getFullUrl() . 'does not exist.',
+								$this->response->statusCode
 							);
 						case 405:
 							throw new Exception(
 								'Method Not Allowed: incorrect HTTP method ' . $this->request->getMethod() . ' provided.',
-								Exception::FAIL
+								$this->response->statusCode
+							);
+						case 405:
+							throw new Exception(
+								'Gone: resource ' . $this->request->getFullUrl() . ' has moved.',
+								$this->response->statusCode
 							);
 						case 415:
 							throw new Exception(
 								'Unsupported Media Type (incorrect HTTP method ' . $this->request->getMethod() . ' provided).',
-								Exception::FAIL
+								$this->response->statusCode
 							);
 						case 429:
 							throw new Exception(
 								'Too many requests: client is rate limited.',
-								Exception::WAIT_RETRY
+								$this->response->statusCode
 							);
 						case 500:
 							$content = $this->asArray();
 							// Check if specific error code have been returned
 							if ( isset( $content['code'] ) && $content['code'] == 'term_exists' ) {
+								// Map to status code 433 (unassigned, used for 'item exists' error type)
 								throw new Exception(
 									isset( $content['message'] ) ? $content['message'] : 'Internal server error.',
-									Exception::ITEM_EXISTS
-								);
-							} else {
-								throw new Exception(
-									'Internal server error.',
-									Exception::FAIL
+									433
 								);
 							}
 
+							throw new Exception( 'Internal server error: ' . $this->response->message, $this->response->statusCode );
+						case 501:
+							throw new Exception( 'Not Implemented: ' . $this->request->getFullUrl() . '.',
+								$this->response->statusCode );
 						case 502:
-							throw new Exception(
-								'Bad Gateway error: server has an issue.',
-								Exception::RETRY
-							);
+							throw new Exception( 'Bad Gateway: server has an issue.',
+								$this->response->statusCode );
 						default:
-							throw new Exception(
-								'Unknown code ' . $this->response->statusCode . ' for URL ' . $this->request->getFullUrl()
-							);
+							throw new Exception( 'Status code ' . $this->response->statusCode . ' returned for URL ' . $this->request->getFullUrl(),
+								$this->response->statusCode );
 					}
 				}
 				$request_success = true;
-			} catch (InvalidParamException $e) {
-				throw new Exception(
-					'Invalid JSON data returned: ' . $e->getMessage(),
-					Exception::ILLEGAL_RESPONSE
-				);
+			} catch ( InvalidParamException $e ) {
+				// Handle JSON parsing error
+				// Map to status code 512 (unassigned, used for 'illegal response')
+				throw new Exception( 'Invalid JSON data returned: ' . $e->getMessage(), 512 );
 
 			} catch ( \yii\httpclient\Exception $e ) {
 				// Check if call can be retried and max retries is not hit
