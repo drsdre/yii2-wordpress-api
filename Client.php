@@ -267,14 +267,12 @@ class Client extends \yii\base\Object {
 	 *
 	 * @param string $entity_url
 	 * @param string $context
-	 * @param array $data
 	 *
 	 * @return self
 	 */
 	public function deleteData(
 		$entity_url,
-		$context = 'edit',
-		array $data
+		$context = 'edit'
 	) {
 		// Set context
 		$data['context'] = $context;
@@ -283,7 +281,6 @@ class Client extends \yii\base\Object {
 			$this->createAuthenticatedRequest()
 			     ->setMethod( 'delete' )
 			     ->setUrl( str_replace( $this->endpoint . '/', '', $entity_url ) ) // Strip endpoint url from url param
-			     ->setData( $data )
 		;
 
 		$this->executeRequest();
