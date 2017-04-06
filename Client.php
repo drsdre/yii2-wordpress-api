@@ -496,7 +496,7 @@ class Client extends \yii\base\Object {
 
 			} catch ( Exception $e ) {
 				// Retry if exception can be retried
-				if ( $e->getCode() == Exception::RETRY && $this->retries < $this->max_retry_attempts ) {
+				if ( $e->getHandleCode() == Exception::HANDLE_AS_RETRY && $this->retries < $this->max_retry_attempts ) {
 					// Retry the request
 					$request_success = false;
 					$this->retries ++;
