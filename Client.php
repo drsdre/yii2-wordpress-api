@@ -266,17 +266,12 @@ class Client extends \yii\base\Object {
 	 * Delete data with entity url
 	 *
 	 * @param string $entity_url
-	 * @param string $context
 	 *
 	 * @return self
 	 */
 	public function deleteData(
-		$entity_url,
-		$context = 'edit'
+		$entity_url
 	) {
-		// Set context
-		$data['context'] = $context;
-
 		$this->request =
 			$this->createAuthenticatedRequest()
 			     ->setMethod( 'delete' )
@@ -488,10 +483,7 @@ class Client extends \yii\base\Object {
 					$this->retries ++;
 				} else {
 					// Too many retries, retrow Exception
-					throw new Exception(
-						'Curl connection error: ' . $e->getMessage(),
-						Exception::FAIL
-					);
+					throw $e;
 				}
 
 			} catch ( Exception $e ) {
