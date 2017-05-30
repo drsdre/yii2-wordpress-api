@@ -144,6 +144,7 @@ class Client extends \yii\base\Object {
 	 * @param string $context view or edit
 	 * @param int|null $page
 	 * @param int $page_length
+	 * @param array $request_data
 	 *
 	 * @return self
 	 */
@@ -151,23 +152,22 @@ class Client extends \yii\base\Object {
 		$entity_url,
 		$context = 'view',
 		$page = null,
-		$page_length = 10
+		$page_length = 10,
+		array $request_data = []
 	) {
 		// Set query data
-		$data = [
-			'context'  => $context,
-			'per_page' => $page_length,
-		];
+		$request_data['context'] = $context;
+		$request_data['per_page'] = $page_length;
 
 		if ( ! is_null( $page ) ) {
-			$data['page'] = $page;
+			$request_data['page'] = $page;
 		}
 
 		$this->request =
 			$this->createAuthenticatedRequest()
 			     ->setMethod( 'get' )
 			     ->setUrl( str_replace( $this->endpoint . '/', '', $entity_url ) )// Strip endpoint url from url param
-			     ->setData( $data )
+			     ->setData( $request_data )
 		;
 
 		$this->executeRequest();
@@ -180,23 +180,23 @@ class Client extends \yii\base\Object {
 	 *
 	 * @param string $entity_url
 	 * @param string $context view or edit
-	 * @param array $data
+	 * @param array $update_data
 	 *
 	 * @return self
 	 */
 	public function putData(
 		$entity_url,
 		$context = 'edit',
-		array $data
+		array $update_data
 	) {
 		// Set Set query data
-		$data['context'] = $context;
+		$update_data['context'] = $context;
 
 		$this->request =
 			$this->createAuthenticatedRequest()
 			     ->setMethod( 'put' )
 			     ->setUrl( str_replace( $this->endpoint . '/', '', $entity_url ) )// Strip endpoint url from url param
-			     ->setData( $data )
+			     ->setData( $update_data )
 		;
 
 		$this->executeRequest();
@@ -209,23 +209,23 @@ class Client extends \yii\base\Object {
 	 *
 	 * @param string $entity_url
 	 * @param string $context view or edit
-	 * @param array $data
+	 * @param array $update_data
 	 *
 	 * @return self
 	 */
 	public function patchData(
 		$entity_url,
 		$context = 'edit',
-		array $data
+		array $update_data
 	) {
 		// Set Set query data
-		$data['context'] = $context;
+		$update_data['context'] = $context;
 
 		$this->request =
 			$this->createAuthenticatedRequest()
 			     ->setMethod( 'patch' )
 			     ->setUrl( str_replace( $this->endpoint . '/', '', $entity_url ) )// Strip endpoint url from url param
-			     ->setData( $data )
+			     ->setData( $update_data )
 		;
 
 		$this->executeRequest();
@@ -238,23 +238,23 @@ class Client extends \yii\base\Object {
 	 *
 	 * @param string $entity_url
 	 * @param string $context view or edit
-	 * @param array $data
+	 * @param array $update_data
 	 *
 	 * @return self
 	 */
 	public function postData(
 		$entity_url,
 		$context = 'view',
-		array $data
+		array $update_data
 	) {
 		// Set context
-		$data['context'] = $context;
+		$update_data['context'] = $context;
 
 		$this->request =
 			$this->createAuthenticatedRequest()
 			     ->setMethod( 'post' )
 			     ->setUrl( str_replace( $this->endpoint . '/', '', $entity_url ) )// Strip endpoint url from url param
-			     ->setData( $data )
+			     ->setData( $update_data )
 		;
 
 		$this->executeRequest();
