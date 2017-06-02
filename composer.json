@@ -24,15 +24,9 @@
       "email": "andre.schuurman+yii2-wordpress-api@gmail.com"
     }
   ],
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "https://github.com/drsdre/yii2-authclient"
-    }
-  ],
   "require": {
     "php": ">=5.5.0",
-    "yiisoft/yii2-authclient": "dev-master as 2.1.4"
+    "yiisoft/yii2-authclient": "~2.1.2"
   },
   "autoload": {
     "psr-4": {
