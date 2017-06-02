@@ -26,13 +26,13 @@ namespace drsdre\WordpressApi;
  * ]
  * ```
  *
- * @see https://github.com/WP-API/OAuth1
- * @see https://wordpress.org/plugins/rest-api-oauth1/
+ * @see    https://github.com/WP-API/OAuth1
+ * @see    https://wordpress.org/plugins/rest-api-oauth1/
  *
  * @author Andre Schuurman <andre.schuurman+yii2-wordpress-api@gmail.com>
  */
-class OAuth1 extends \yii\authclient\OAuth1
-{
+class OAuth1 extends \yii\authclient\OAuth1 {
+
 	/**
 	 * @inheritdoc
 	 */
@@ -59,6 +59,11 @@ class OAuth1 extends \yii\authclient\OAuth1
 	public $accessTokenMethod = 'POST';
 
 	/**
+	 * @inheritdoc
+	 */
+	public $authorizationHeaderMethods = [ 'POST', 'PATCH', 'PUT', 'DELETE' ];
+
+	/**
 	 * var $apiBaseUrl is Wordpress site url (json slug is auto added)
 	 */
 	public $apiBaseUrl;
@@ -70,35 +75,32 @@ class OAuth1 extends \yii\authclient\OAuth1
 		parent::__construct( $config );
 
 		// Add apiBaseUrl to auth, requestToken and accessToken URL's
-		$this->authUrl = $this->apiBaseUrl.'/'.$this->authUrl;
-		$this->requestTokenUrl = $this->apiBaseUrl.'/'.$this->requestTokenUrl;
-		$this->accessTokenUrl = $this->apiBaseUrl.'/'.$this->accessTokenUrl;
+		$this->authUrl         = $this->apiBaseUrl . '/' . $this->authUrl;
+		$this->requestTokenUrl = $this->apiBaseUrl . '/' . $this->requestTokenUrl;
+		$this->accessTokenUrl  = $this->apiBaseUrl . '/' . $this->accessTokenUrl;
 
 		// Set apiBaseUrl to Wordpress Rest API base slug
-		$this->apiBaseUrl = $this->apiBaseUrl.'/wp-json';
+		$this->apiBaseUrl = $this->apiBaseUrl . '/wp-json';
 	}
 
 	/**
 	 * @inheritdoc
 	 */
-	protected function initUserAttributes()
-	{
-		return $this->api('account/verify_credentials.json', 'GET', $this->attributeParams);
+	protected function initUserAttributes() {
+		return $this->api( 'account/verify_credentials.json', 'GET', $this->attributeParams );
 	}
 
 	/**
 	 * @inheritdoc
 	 */
-	protected function defaultName()
-	{
+	protected function defaultName() {
 		return 'wordpress';
 	}
 
 	/**
 	 * @inheritdoc
 	 */
-	protected function defaultTitle()
-	{
+	protected function defaultTitle() {
 		return 'Wordpress';
 	}
 }
