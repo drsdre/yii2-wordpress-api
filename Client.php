@@ -472,7 +472,7 @@ class Client extends \yii\base\Object {
 			} catch ( InvalidParamException $e ) {
 				// Handle JSON parsing error
 				// Map to status code 512 (unassigned, used for 'illegal response')
-				throw new Exception( 'Invalid JSON data returned: ' . $e->getMessage(), 512 );
+				throw new Exception( 'Invalid JSON data returned (' . $e->getMessage() . "): " . $this->response->content, 512 );
 
 			} catch ( \yii\httpclient\Exception $e ) {
 				// Check if call can be retried and max retries is not hit
