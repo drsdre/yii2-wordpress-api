@@ -456,7 +456,11 @@ class Client extends \yii\base\Object {
 								);
 							}
 
-							throw new Exception( 'Internal server error: ' . $this->response->message, $this->response->statusCode );
+							throw new Exception( 'Internal server error: ' .
+							                     ( isset($result_content->message) ?
+								                     $result_content->message :
+								                     $this->response->content,
+								$this->response->statusCode );
 						case 501:
 							throw new Exception( 'Not Implemented: ' . $this->request->getFullUrl() . '.',
 								$this->response->statusCode );
