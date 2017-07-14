@@ -29,6 +29,7 @@ class Exception extends \yii\base\Exception {
 
 	static $code_handle_mappings = [
 		404 => self::HANDLE_AS_ITEM_NOT_FOUND,
+		410 => self::HANDLE_AS_ITEM_NOT_FOUND,
 		429 => self::HANDLE_AS_WAIT_RETRY,
 		432 => self::HANDLE_AS_RETRY,
 		433 => self::HANDLE_AS_ITEM_EXISTS,
