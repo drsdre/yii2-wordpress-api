@@ -6,7 +6,9 @@ use yii\helpers\Json;
 use yii\authclient\OAuthToken;
 use yii\base\InvalidConfigException;
 use yii\base\InvalidParamException;
+use yii\httpclient\Request;
 use yii\httpclient\Response;
+use yii\httpclient\Client as HttpClient;
 
 /**
  * Client for communicating with a Wordpress Rest API interface (standard included from Wordpress 4.7 on).
@@ -38,7 +40,7 @@ class Client extends \yii\base\Object {
 	public $client_secret;
 
 	/**
-	 * @var string API access token
+	 * @var array API access token
 	 */
 	public $access_token;
 
@@ -79,11 +81,11 @@ class Client extends \yii\base\Object {
 	 */
 	public $retries = 0;
 	/**
-	 * @var yii\httpclient\Request $request
+	 * @var Request $request
 	 */
 	protected $request;
 	/**
-	 * @var yii\httpclient\Response $response
+	 * @var Response $response
 	 */
 	protected $response;
 	/**
@@ -108,13 +110,13 @@ class Client extends \yii\base\Object {
 					'or username and password for basic auth [development only].' );
 			}
 
-			$this->client = new yii\httpclient\Client( [
+			$this->client = new HttpClient( [
 				'baseUrl'        => $this->endpoint,
 				'requestConfig'  => [
-					'format' => yii\httpclient\Client::FORMAT_JSON,
+					'format' => HttpClient::FORMAT_JSON,
 				],
 				'responseConfig' => [
-					'format' => yii\httpclient\Client::FORMAT_JSON,
+					'format' => HttpClient::FORMAT_JSON,
 				],
 			] );
 		} else {
@@ -142,25 +144,25 @@ class Client extends \yii\base\Object {
 	 *
 	 * @param string $entity_url
 	 * @param string $context view or edit
-	 * @param int|null $page
+	 * @param int|null $page_number
 	 * @param int $page_length
 	 * @param array $request_data
 	 *
-	 * @return self
+	 * @return $this
 	 */
 	public function getData(
 		$entity_url,
 		$context = 'view',
-		$page = null,
+		$page_number = null,
 		$page_length = 10,
 		array $request_data = []
 	) {
 		// Set query data
-		$request_data['context'] = $context;
+		$request_data['context']  = $context;
 		$request_data['per_page'] = $page_length;
 
-		if ( ! is_null( $page ) ) {
-			$request_data['page'] = $page;
+		if ( ! is_null( $page_number ) ) {
+			$request_data['page'] = $page_number;
 		}
 
 		$this->request =
@@ -182,7 +184,7 @@ class Client extends \yii\base\Object {
 	 * @param string $context view or edit
 	 * @param array $update_data
 	 *
-	 * @return self
+	 * @return $this
 	 */
 	public function putData(
 		$entity_url,
@@ -211,7 +213,7 @@ class Client extends \yii\base\Object {
 	 * @param string $context view or edit
 	 * @param array $update_data
 	 *
-	 * @return self
+	 * @return $this
 	 */
 	public function patchData(
 		$entity_url,
@@ -233,6 +235,8 @@ class Client extends \yii\base\Object {
 		return $this;
 	}
 
+	// API Data response methods
+
 	/**
 	 * Post data with entity url
 	 *
@@ -240,7 +244,7 @@ class Client extends \yii\base\Object {
 	 * @param string $context view or edit
 	 * @param array $update_data
 	 *
-	 * @return self
+	 * @return $this
 	 */
 	public function postData(
 		$entity_url,
@@ -266,16 +270,53 @@ class Client extends \yii\base\Object {
 	 * Delete data with entity url
 	 *
 	 * @param string $entity_url
+	 * @param bool $force
 	 *
-	 * @return self
+	 * @return $this
 	 */
 	public function deleteData(
-		$entity_url
+		string $entity_url,
+		bool $force = true
 	) {
 		$this->request =
 			$this->createAuthenticatedRequest()
 			     ->setMethod( 'delete' )
-			     ->setUrl( str_replace( $this->endpoint . '/', '', $entity_url ) ) // Strip endpoint url from url param
+			     ->setUrl(
+				     str_replace( $this->endpoint . '/', '', $entity_url ) .
+				     ( $force ? '?force=true' : '' )
+			     ) // Strip endpoint url from url param
+		;
+
+		$this->executeRequest();
+
+		return $this;
+	}
+
+	/**
+	 * Upload file to entity url
+	 *
+	 * @param $entity_url
+	 * @param $file_name
+	 * @param $file_content_type
+	 * @param $file_data
+	 *
+	 * @return $this
+	 */
+	public function uploadFile(
+		$entity_url,
+		$file_name,
+		$file_content_type,
+		& $file_data
+	) {
+		$this->request =
+			$this->createAuthenticatedRequest()
+			     ->setMethod( 'post' )
+			     ->setUrl( str_replace( $this->endpoint . '/', '', $entity_url ) )// Strip endpoint url from url param
+			     ->setContent( $file_data )
+			     ->addHeaders( [
+				     'content-disposition' => 'attachment; filename=' . $file_name,
+				     'content-type'        => $file_content_type,
+			     ] )
 		;
 
 		$this->executeRequest();
@@ -295,6 +336,8 @@ class Client extends \yii\base\Object {
 		if ( isset( $this->response->content ) ) {
 			return Json::decode( $this->response->content, true );
 		}
+
+		return [];
 	}
 
 	/**
@@ -307,6 +350,8 @@ class Client extends \yii\base\Object {
 		if ( isset( $this->response->content ) ) {
 			return Json::decode( $this->response->content, false );
 		}
+
+		return null;
 	}
 
 	/**
@@ -318,21 +363,27 @@ class Client extends \yii\base\Object {
 		if ( isset( $this->response->content ) ) {
 			return $this->response->content;
 		}
+
+		return null;
 	}
 
 	/**
 	 * Get the request content from the last request
+	 *
+	 * @return string
 	 */
 	public function getLastRequestContent() {
-		if (isset($this->request->content)) {
+		if ( isset( $this->request->content ) ) {
 			return $this->request->content;
 		}
+
+		return null;
 	}
 
 	/**
 	 * Create authenticated request
 	 *
-	 * @return yii\httpclient\Request
+	 * @return Request
 	 */
 	protected function createAuthenticatedRequest() {
 		if ( is_a( $this->client, 'drsdre\WordpressApi\OAuth1' ) ) {
@@ -365,7 +416,6 @@ class Client extends \yii\base\Object {
 	 * @throws Exception on failure
 	 * @throws \yii\httpclient\Exception
 	 * @throws \Exception
-	 * @return \stdClass
 	 */
 	protected function executeRequest() {
 
@@ -430,7 +480,7 @@ class Client extends \yii\base\Object {
 								'Method Not Allowed: incorrect HTTP method ' . $this->request->getMethod() . ' provided.',
 								$this->response->statusCode
 							);
-						case 405:
+						case 410:
 							throw new Exception(
 								'Gone: resource ' . $this->request->getFullUrl() . ' has moved.',
 								$this->response->statusCode
@@ -457,9 +507,15 @@ class Client extends \yii\base\Object {
 							}
 
 							throw new Exception( 'Internal server error: ' .
-							                     ( isset($result_content->message) ?
+							                     ( isset( $result_content->code ) ?
+								                     $result_content->code . ' => ' :
+								                     $this->response->content ) .
+							                     ( isset( $result_content->message ) ?
 								                     $result_content->message :
-								                     $this->response->content ),
+								                     '' ) .
+							                     ( isset( $result_content->data ) ?
+								                     ' (' . print_r( $result_content->data, true ) . ')' :
+								                     '' ),
 								$this->response->statusCode );
 						case 501:
 							throw new Exception( 'Not Implemented: ' . $this->request->getFullUrl() . '.',
@@ -476,7 +532,8 @@ class Client extends \yii\base\Object {
 			} catch ( InvalidParamException $e ) {
 				// Handle JSON parsing error
 				// Map to status code 512 (unassigned, used for 'illegal response')
-				throw new Exception( 'Invalid JSON data returned (' . $e->getMessage() . "): " . $this->response->content, 512 );
+				throw new Exception( 'Invalid JSON data returned (' . $e->getMessage() . "): " . $this->response->content,
+					512 );
 
 			} catch ( \yii\httpclient\Exception $e ) {
 				// Check if call can be retried and max retries is not hit
@@ -488,6 +545,8 @@ class Client extends \yii\base\Object {
 				} else {
 					// Too many retries, retrow Exception
 					throw $e;
+					// TODO double check this if does not break underlying logic
+					// throw new Exception( "HttpClient error (retried {$this->retries}): " . $e->getMessage(), $e->getCode() );
 				}
 
 			} catch ( Exception $e ) {
