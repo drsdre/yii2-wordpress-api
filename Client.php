@@ -472,7 +472,7 @@ class Client extends \yii\base\Object {
 							);
 						case 404:
 							throw new Exception(
-								'Not found: ' . $this->request->getFullUrl() . 'does not exist.',
+								'Not found: ' . $this->request->getFullUrl() . ' does not exist.',
 								$this->response->statusCode
 							);
 						case 405:
