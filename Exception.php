@@ -6,6 +6,7 @@ namespace drsdre\WordpressApi;
  * Wordpress API Exception class for Wordpress Client errors
  *
  * Error codes handling retry and other specific conditions
+ * Curl error codes range from 1 to 92, http status codes from 100 to 599
  *
  * @author Andre Schuurman <andre.schuurman+yii2-wordpress-api@gmail.com>
  */
@@ -28,6 +29,13 @@ class Exception extends \yii\base\Exception {
 	];
 
 	static $code_handle_mappings = [
+		// Curl timeout errors
+		2 => self::HANDLE_AS_RETRY,
+		7 => self::HANDLE_AS_RETRY,
+		28 => self::HANDLE_AS_RETRY,
+		55 => self::HANDLE_AS_RETRY,
+		56 => self::HANDLE_AS_RETRY,
+		// HTTP status errors
 		404 => self::HANDLE_AS_ITEM_NOT_FOUND,
 		410 => self::HANDLE_AS_ITEM_NOT_FOUND,
 		429 => self::HANDLE_AS_WAIT_RETRY,

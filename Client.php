@@ -429,106 +429,121 @@ class Client extends \yii\base\Object {
 				// Test the result
 				$result_content = Json::decode( $this->response->content, false );
 
-				// Check if response is valid
-				if ( ! $this->response->isOk ) {
+				try {
 
-					// Error handling
-					switch ( $this->response->statusCode ) {
-						case 304:
-							throw new Exception( 'Not Modified.', $this->response->statusCode );
-						case 400:
-							// Collect the request parameters
-							$parameter_errors = [];
-							foreach ( $result_content->data->params as $param_error ) {
-								$parameter_errors[] = $param_error;
-							}
+					// Check if response is valid
+					if ( ! $this->response->isOk ) {
 
-							throw new Exception(
-								'Bad Request: ' . implode( ' | ',
-									$parameter_errors ) . ' (request ' . $this->request->getFullUrl() . ').',
-								$this->response->statusCode
-							);
-						case 401:
-							if ( isset( $result_content->code ) && $result_content->code == 'json_oauth1_nonce_already_used' ) {
-								// Oauth1 nonce already used, can be retried
+						// Error handling
+						switch ( $this->response->statusCode ) {
+							case 304:
+								throw new Exception( 'Not Modified.', $this->response->statusCode );
+							case 400:
+								// Collect the request parameters
+								$parameter_errors = [];
+								foreach ( $result_content->data->params as $param_error ) {
+									$parameter_errors[] = $param_error;
+								}
 
-								// Map to status code 432 (unassigned)
 								throw new Exception(
-									( isset( $result_content->message ) ? $result_content->message : $this->response->content ) .
-									' ' . $this->request->getFullUrl(),
-									432
+									'Bad Request: ' . implode( ' | ',
+										$parameter_errors ) . ' (request ' . $this->request->getFullUrl() . ').',
+									$this->response->statusCode
 								);
-							}
+							case 401:
+								if ( isset( $result_content->code ) && $result_content->code == 'json_oauth1_nonce_already_used' ) {
+									// Oauth1 nonce already used, can be retried
 
-							// Generic 401 error
-							throw new Exception(
-								'Unauthorized: ' . $result_content->message . ' (request ' . $this->request->getFullUrl() . ').',
-								$this->response->statusCode
-							);
-						case 403:
-							throw new Exception(
-								'Forbidden: request not allowed accessing ' . $this->request->getFullUrl(),
-								$this->response->statusCode
-							);
-						case 404:
-							throw new Exception(
-								'Not found: ' . $this->request->getFullUrl() . ' does not exist.',
-								$this->response->statusCode
-							);
-						case 405:
-							throw new Exception(
-								'Method Not Allowed: incorrect HTTP method ' . $this->request->getMethod() . ' provided.',
-								$this->response->statusCode
-							);
-						case 410:
-							throw new Exception(
-								'Gone: resource ' . $this->request->getFullUrl() . ' has moved.',
-								$this->response->statusCode
-							);
-						case 415:
-							throw new Exception(
-								'Unsupported Media Type (incorrect HTTP method ' . $this->request->getMethod() . ' provided).',
-								$this->response->statusCode
-							);
-						case 429:
-							throw new Exception(
-								'Too many requests: client is rate limited.',
-								$this->response->statusCode
-							);
-						case 500:
-							$content = $this->asArray();
-							// Check if specific error code have been returned
-							if ( isset( $content['code'] ) && $content['code'] == 'term_exists' ) {
-								// Map to status code 433 (unassigned, used for 'item exists' error type)
+									// Map to status code 432 (unassigned)
+									throw new Exception(
+										( isset( $result_content->message ) ? $result_content->message : $this->response->content ) .
+										' ' . $this->request->getFullUrl(),
+										432
+									);
+								}
+
+								// Generic 401 error
 								throw new Exception(
-									isset( $content['message'] ) ? $content['message'] : 'Internal server error.',
-									433
+									'Unauthorized: ' . $result_content->message . ' (request ' . $this->request->getFullUrl() . ').',
+									$this->response->statusCode
 								);
-							}
+							case 403:
+								throw new Exception(
+									'Forbidden: request not allowed accessing ' . $this->request->getFullUrl(),
+									$this->response->statusCode
+								);
+							case 404:
+								throw new Exception(
+									'Not found: ' . $this->request->getFullUrl() . ' does not exist.',
+									$this->response->statusCode
+								);
+							case 405:
+								throw new Exception(
+									'Method Not Allowed: incorrect HTTP method ' . $this->request->getMethod() . ' provided.',
+									$this->response->statusCode
+								);
+							case 410:
+								throw new Exception(
+									'Gone: resource ' . $this->request->getFullUrl() . ' has moved.',
+									$this->response->statusCode
+								);
+							case 415:
+								throw new Exception(
+									'Unsupported Media Type (incorrect HTTP method ' . $this->request->getMethod() . ' provided).',
+									$this->response->statusCode
+								);
+							case 429:
+								throw new Exception(
+									'Too many requests: client is rate limited.',
+									$this->response->statusCode
+								);
+							case 500:
+								$content = $this->asArray();
+								// Check if specific error code have been returned
+								if ( isset( $content['code'] ) && $content['code'] == 'term_exists' ) {
+									// Map to status code 433 (unassigned, used for 'item exists' error type)
+									throw new Exception(
+										isset( $content['message'] ) ? $content['message'] : 'Internal server error.',
+										433
+									);
+								}
 
-							throw new Exception( 'Internal server error: ' .
-							                     ( isset( $result_content->code ) ?
-								                     $result_content->code . ' => ' :
-								                     $this->response->content ) .
-							                     ( isset( $result_content->message ) ?
-								                     $result_content->message :
-								                     '' ) .
-							                     ( isset( $result_content->data ) ?
-								                     ' (' . print_r( $result_content->data, true ) . ')' :
-								                     '' ),
-								$this->response->statusCode );
-						case 501:
-							throw new Exception( 'Not Implemented: ' . $this->request->getFullUrl() . '.',
-								$this->response->statusCode );
-						case 502:
-							throw new Exception( 'Bad Gateway: server has an issue.',
-								$this->response->statusCode );
-						default:
-							throw new Exception( 'Status code ' . $this->response->statusCode . ' returned for URL ' . $this->request->getFullUrl(),
-								$this->response->statusCode );
+								throw new Exception( 'Internal server error: ' .
+								                     ( isset( $result_content->code ) ?
+									                     $result_content->code . ' => ' :
+									                     $this->response->content ) .
+								                     ( isset( $result_content->message ) ?
+									                     $result_content->message :
+									                     '' ) .
+								                     ( isset( $result_content->data ) ?
+									                     ' (' . print_r( $result_content->data, true ) . ')' :
+									                     '' ),
+									$this->response->statusCode );
+							case 501:
+								throw new Exception( 'Not Implemented: ' . $this->request->getFullUrl() . '.',
+									$this->response->statusCode );
+							case 502:
+								throw new Exception( 'Bad Gateway: server has an issue.',
+									$this->response->statusCode );
+							default:
+								throw new Exception( 'Status code ' . $this->response->statusCode . ' returned for URL ' . $this->request->getFullUrl(),
+									$this->response->statusCode );
+						}
+					}
+					$request_success = true;
+
+				} catch ( Exception $e ) {
+					// Retry if exception can be retried
+					if ( $e->getHandleCode() == Exception::HANDLE_AS_RETRY && $this->retries < $this->max_retry_attempts ) {
+						// Retry the request
+						$request_success = false;
+						$this->retries ++;
+					} else {
+						// Too many retries, retrow Exception
+						throw $e;
 					}
 				}
-				$request_success = true;
+
 			} catch ( InvalidParamException $e ) {
 				// Handle JSON parsing error
 				// Map to status code 512 (unassigned, used for 'illegal response')
@@ -536,28 +551,19 @@ class Client extends \yii\base\Object {
 					512 );
 
 			} catch ( \yii\httpclient\Exception $e ) {
+				// HTTPClient connection layer errors
 				// Check if call can be retried and max retries is not hit
-				// Should this be code 7 CURLE_COULDNT_CONNECT ?
-				if ( $e->getCode() == 2 && $this->retries < $this->max_retry_attempts ) {
+				if ( in_array( $e->getCode(), [ 2, 7, 28, 55, 56 ] ) && $this->retries < $this->max_retry_attempts ) {
 					// Retry the request
 					$request_success = false;
 					$this->retries ++;
 				} else {
-					// Too many retries, retrow Exception
-					throw $e;
-					// TODO double check this if does not break underlying logic
-					// throw new Exception( "HttpClient error (retried {$this->retries}): " . $e->getMessage(), $e->getCode() );
-				}
-
-			} catch ( Exception $e ) {
-				// Retry if exception can be retried
-				if ( $e->getHandleCode() == Exception::HANDLE_AS_RETRY && $this->retries < $this->max_retry_attempts ) {
-					// Retry the request
-					$request_success = false;
-					$this->retries ++;
-				} else {
-					// Too many retries, retrow Exception
-					throw $e;
+					// Can not be retried or too many retries
+					// Throw Wordpress API Exception
+					throw new Exception(
+						"HttpClient error (retried {$this->retries}): " . $e->getMessage(),
+						$e->getCode()
+					);
 				}
 			}
 
