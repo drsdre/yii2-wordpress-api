@@ -441,8 +441,10 @@ class Client extends \yii\base\Object {
 							case 400:
 								// Collect the request parameters
 								$parameter_errors = [];
-								foreach ( $result_content->data->params as $param_error ) {
-									$parameter_errors[] = $param_error;
+								if ( isset( $result_content->data->params ) ) {
+									foreach ( $result_content->data->params as $param_error ) {
+										$parameter_errors[] = $param_error;
+									}
 								}
 
 								throw new Exception(
