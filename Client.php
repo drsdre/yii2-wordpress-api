@@ -448,8 +448,9 @@ class Client extends \yii\base\Object {
 								}
 
 								throw new Exception(
-									'Bad Request: ' . implode( ' | ',
-										$parameter_errors ) . ' (request ' . $this->request->getFullUrl() . ').',
+									'Bad Request ' . (isset($result_content->message)?$result_content->message:'unknown') .
+									' Params: ' .implode( ' | ', $parameter_errors ) .
+									' URL: ' . $this->request->getFullUrl(),
 									$this->response->statusCode
 								);
 							case 401:
