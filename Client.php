@@ -4,6 +4,7 @@ namespace drsdre\WordpressApi;
 
 use yii\helpers\Json;
 use yii\authclient\OAuthToken;
+use yii\base\BaseObject;
 use yii\base\InvalidConfigException;
 use yii\base\InvalidParamException;
 use yii\httpclient\Request;
@@ -22,7 +23,7 @@ use yii\httpclient\Client as HttpClient;
  *
  * @author Andre Schuurman <andre.schuurman+yii2-wordpress-api@gmail.com>
  */
-class Client extends \yii\base\Object {
+class Client extends BaseObject {
 
 	/**
 	 * @var string API url endpoint
@@ -149,6 +150,9 @@ class Client extends \yii\base\Object {
 	 * @param array $request_data
 	 *
 	 * @return $this
+	 * @throws Exception
+	 * @throws \Exception
+	 * @throws \yii\httpclient\Exception
 	 */
 	public function getData(
 		$entity_url,
@@ -185,6 +189,9 @@ class Client extends \yii\base\Object {
 	 * @param array $update_data
 	 *
 	 * @return $this
+	 * @throws Exception
+	 * @throws \Exception
+	 * @throws \yii\httpclient\Exception
 	 */
 	public function putData(
 		$entity_url,
@@ -214,6 +221,9 @@ class Client extends \yii\base\Object {
 	 * @param array $update_data
 	 *
 	 * @return $this
+	 * @throws Exception
+	 * @throws \Exception
+	 * @throws \yii\httpclient\Exception
 	 */
 	public function patchData(
 		$entity_url,
@@ -245,6 +255,9 @@ class Client extends \yii\base\Object {
 	 * @param array $update_data
 	 *
 	 * @return $this
+	 * @throws Exception
+	 * @throws \Exception
+	 * @throws \yii\httpclient\Exception
 	 */
 	public function postData(
 		$entity_url,
@@ -273,6 +286,9 @@ class Client extends \yii\base\Object {
 	 * @param bool $force
 	 *
 	 * @return $this
+	 * @throws Exception
+	 * @throws \Exception
+	 * @throws \yii\httpclient\Exception
 	 */
 	public function deleteData(
 		string $entity_url,
@@ -301,6 +317,9 @@ class Client extends \yii\base\Object {
 	 * @param $file_data
 	 *
 	 * @return $this
+	 * @throws Exception
+	 * @throws \Exception
+	 * @throws \yii\httpclient\Exception
 	 */
 	public function uploadFile(
 		$entity_url,
@@ -330,7 +349,7 @@ class Client extends \yii\base\Object {
 	 * Return content as array
 	 *
 	 * @return array
-	 * @throws Exception
+	 * @throws \Exception
 	 */
 	public function asArray() {
 		if ( isset( $this->response->content ) ) {
@@ -344,7 +363,7 @@ class Client extends \yii\base\Object {
 	 * Return content as object
 	 *
 	 * @return \stdClass
-	 * @throws Exception
+	 * @throws \Exception
 	 */
 	public function asObject() {
 		if ( isset( $this->response->content ) ) {
@@ -414,7 +433,6 @@ class Client extends \yii\base\Object {
 	 * Parse API response
 	 *
 	 * @throws Exception on failure
-	 * @throws \yii\httpclient\Exception
 	 * @throws \Exception
 	 */
 	protected function executeRequest() {
@@ -434,6 +452,9 @@ class Client extends \yii\base\Object {
 					// Check if response is valid
 					if ( ! $this->response->isOk ) {
 
+						$error_data = (isset($result_content->code)?' Code: ' . $result_content->code . ' ':'') .
+									' URL: ' . $this->request->getFullUrl();
+
 						// Error handling
 						switch ( $this->response->statusCode ) {
 							case 304:
@@ -450,7 +471,7 @@ class Client extends \yii\base\Object {
 								throw new Exception(
 									'Bad Request ' . (isset($result_content->message)?$result_content->message:'unknown') .
 									' Params: ' .implode( ' | ', $parameter_errors ) .
-									' URL: ' . $this->request->getFullUrl(),
+									$error_data,
 									$this->response->statusCode
 								);
 							case 401:
@@ -460,44 +481,52 @@ class Client extends \yii\base\Object {
 									// Map to status code 432 (unassigned)
 									throw new Exception(
 										( isset( $result_content->message ) ? $result_content->message : $this->response->content ) .
-										' ' . $this->request->getFullUrl(),
+										$error_data,
 										432
 									);
 								}
 
 								// Generic 401 error
 								throw new Exception(
-									'Unauthorized: ' . $result_content->message . ' (request ' . $this->request->getFullUrl() . ').',
+									'Unauthorized: ' .
+									( isset( $result_content->message ) ? $result_content->message : $this->response->content ) .
+									$error_data,
 									$this->response->statusCode
 								);
 							case 403:
 								throw new Exception(
-									'Forbidden: request not allowed accessing ' . $this->request->getFullUrl(),
+									'Forbidden: request not allowed.' .
+									$error_data,
 									$this->response->statusCode
 								);
 							case 404:
 								throw new Exception(
-									'Not found: ' . $this->request->getFullUrl() . ' does not exist.',
+									'Not found: URL does not exist.' .
+									$error_data,
 									$this->response->statusCode
 								);
 							case 405:
 								throw new Exception(
-									'Method Not Allowed: incorrect HTTP method ' . $this->request->getMethod() . ' provided.',
+									'Method Not Allowed: incorrect HTTP method ' . $this->request->getMethod() . ' provided.' .
+									$error_data,
 									$this->response->statusCode
 								);
 							case 410:
 								throw new Exception(
-									'Gone: resource ' . $this->request->getFullUrl() . ' has moved.',
+									'Gone: URL has moved.' .
+									$error_data,
 									$this->response->statusCode
 								);
 							case 415:
 								throw new Exception(
-									'Unsupported Media Type (incorrect HTTP method ' . $this->request->getMethod() . ' provided).',
+									'Unsupported Media Type (incorrect HTTP method ' . $this->request->getMethod() . ' provided).' .
+									$error_data,
 									$this->response->statusCode
 								);
 							case 429:
 								throw new Exception(
-									'Too many requests: client is rate limited.',
+									'Too many requests: client is rate limited.' .
+									$error_data,
 									$this->response->statusCode
 								);
 							case 500:
@@ -523,13 +552,14 @@ class Client extends \yii\base\Object {
 									                     '' ),
 									$this->response->statusCode );
 							case 501:
-								throw new Exception( 'Not Implemented: ' . $this->request->getFullUrl() . '.',
+								throw new Exception( 'Not Implemented.' . $error_data,
 									$this->response->statusCode );
 							case 502:
-								throw new Exception( 'Bad Gateway: server has an issue.',
+								throw new Exception( 'Bad Gateway: server has an issue.' . $error_data,
 									$this->response->statusCode );
 							default:
-								throw new Exception( 'Status code ' . $this->response->statusCode . ' returned for URL ' . $this->request->getFullUrl(),
+								throw new Exception( 'Status code ' . $this->response->statusCode . ' returned.' .
+								                     $error_data,
 									$this->response->statusCode );
 						}
 					}
