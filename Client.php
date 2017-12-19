@@ -151,8 +151,6 @@ class Client extends BaseObject {
 	 *
 	 * @return $this
 	 * @throws Exception
-	 * @throws \Exception
-	 * @throws \yii\httpclient\Exception
 	 */
 	public function getData(
 		$entity_url,
@@ -190,8 +188,6 @@ class Client extends BaseObject {
 	 *
 	 * @return $this
 	 * @throws Exception
-	 * @throws \Exception
-	 * @throws \yii\httpclient\Exception
 	 */
 	public function putData(
 		$entity_url,
@@ -222,8 +218,6 @@ class Client extends BaseObject {
 	 *
 	 * @return $this
 	 * @throws Exception
-	 * @throws \Exception
-	 * @throws \yii\httpclient\Exception
 	 */
 	public function patchData(
 		$entity_url,
@@ -256,8 +250,6 @@ class Client extends BaseObject {
 	 *
 	 * @return $this
 	 * @throws Exception
-	 * @throws \Exception
-	 * @throws \yii\httpclient\Exception
 	 */
 	public function postData(
 		$entity_url,
@@ -287,8 +279,6 @@ class Client extends BaseObject {
 	 *
 	 * @return $this
 	 * @throws Exception
-	 * @throws \Exception
-	 * @throws \yii\httpclient\Exception
 	 */
 	public function deleteData(
 		string $entity_url,
@@ -318,8 +308,6 @@ class Client extends BaseObject {
 	 *
 	 * @return $this
 	 * @throws Exception
-	 * @throws \Exception
-	 * @throws \yii\httpclient\Exception
 	 */
 	public function uploadFile(
 		$entity_url,
@@ -349,7 +337,6 @@ class Client extends BaseObject {
 	 * Return content as array
 	 *
 	 * @return array
-	 * @throws \Exception
 	 */
 	public function asArray() {
 		if ( isset( $this->response->content ) ) {
@@ -363,7 +350,6 @@ class Client extends BaseObject {
 	 * Return content as object
 	 *
 	 * @return \stdClass
-	 * @throws \Exception
 	 */
 	public function asObject() {
 		if ( isset( $this->response->content ) ) {
@@ -433,7 +419,6 @@ class Client extends BaseObject {
 	 * Parse API response
 	 *
 	 * @throws Exception on failure
-	 * @throws \Exception
 	 */
 	protected function executeRequest() {
 
