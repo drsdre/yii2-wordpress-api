@@ -2,11 +2,12 @@
 
 namespace drsdre\WordpressApi;
 
+use yii;
 use yii\helpers\Json;
 use yii\authclient\OAuthToken;
 use yii\base\BaseObject;
 use yii\base\InvalidConfigException;
-use yii\base\InvalidParamException;
+use yii\base\InvalidArgumentException;
 use yii\httpclient\Request;
 use yii\httpclient\Response;
 use yii\httpclient\Client as HttpClient;
@@ -22,6 +23,8 @@ use yii\httpclient\Client as HttpClient;
  * @see    http://v2.wp-api.org/
  *
  * @author Andre Schuurman <andre.schuurman+yii2-wordpress-api@gmail.com>
+ *
+ * @property $lastRequestContent string
  */
 class Client extends BaseObject {
 
@@ -426,8 +429,18 @@ class Client extends BaseObject {
 
 		do {
 			try {
+				yii::debug(
+					'Send ' . $this->request->method . ' request to WP url ' . $this->request->fullUrl,
+					__METHOD__
+				);
+
 				// Execute the request
 				$this->response = $this->request->send();
+
+				yii::debug(
+					'WP Response: ' . $this->response->content,
+					__METHOD__
+				);
 
 				// Test the result
 				$result_content = Json::decode( $this->response->content, false );
@@ -562,7 +575,7 @@ class Client extends BaseObject {
 					}
 				}
 
-			} catch ( InvalidParamException $e ) {
+			} catch ( InvalidArgumentException $e ) {
 				// Handle JSON parsing error
 				// Map to status code 512 (unassigned, used for 'illegal response')
 				throw new Exception( 'Invalid JSON data returned (' . $e->getMessage() . "): " . $this->response->content,
